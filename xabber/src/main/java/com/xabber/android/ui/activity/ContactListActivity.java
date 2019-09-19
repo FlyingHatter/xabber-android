@@ -121,6 +121,7 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
     private static final String CHAT_LIST_TAG = "CHAT_LIST";
     private static final String DISCOVER_TAG = "DISCOVER_TAG";
     private static final String CALLS_TAG = "CALLS_TAG";
+    private static final String BOTTOM_BAR_TAG = "BOTTOM_BAR_TAG";
 
     private static final String LOG_TAG = ContactListActivity.class.getSimpleName();
 
@@ -134,10 +135,8 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
      */
     private String sendText;
     private int unreadMessagesCount;
-    private BottomBar bottomBar;
     private Fragment contentFragment;
     private ActiveFragment currentActiveFragment = ActiveFragment.CHATS;
-    private boolean fragmentToggle = false;
     private ChatListFragment.ChatListState currentChatListState;
 
     private View showcaseView;
@@ -233,7 +232,7 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
             action = savedInstanceState.getString(SAVED_ACTION);
         } else {
             showBottomNavigation();
-            showChatListFragment(null);
+            showChatListFragment();
             sendText = null;
             action = getIntent().getAction();
         }
@@ -270,11 +269,6 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
         outState.putString(SAVED_SEND_TEXT, sendText);
         super.onSaveInstanceState(outState);
     }
-
-//    @Override
-//    public void onBackStackChanged() {
-//        Toast.makeText(this, "CHANGED BACKSTACK", Toast.LENGTH_SHORT).show();
-//    }
 
     /**
      * Open chat with specified contact.
@@ -415,7 +409,6 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
                     }
                     break;
                 }
-
                 case ContactListActivity.ACTION_MUC_PRIVATE_CHAT_INVITE:
                     action = null;
                     showMucPrivateChatDialog();
@@ -441,7 +434,6 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
                 }
             }
         }
-
         showPassDialogs();
 
         //showcase
@@ -556,7 +548,7 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
 
     public void onChatListStateChanged(ChatListFragment.ChatListState chatListState){
         currentChatListState = chatListState;
-        bottomBar.setChatStateIcon(chatListState);
+        getBottomBarFragment().setChatStateIcon(chatListState);
     }
 
     private void exit() {
@@ -570,10 +562,6 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
                 finish();
             }
         }, CLOSE_ACTIVITY_AFTER_DELAY);
-    }
-
-    private ContactListFragment getContactListFragment() {
-        return (ContactListFragment) getSupportFragmentManager().findFragmentByTag(CONTACT_LIST_TAG);
     }
 
     @Override
@@ -707,9 +695,14 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
 
     @Override
     public void onAccountsChanged(Collection<AccountJid> accounts) {
-        //rebuildAccountToggle();
-        bottomBar.setColoredButton(currentActiveFragment);
+        getBottomBarFragment().setColoredButton(currentActiveFragment);
         setStatusBarColor();
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onUnreadMessagesCountChanged(ContactListPresenter.UpdateUnreadCountEvent event) {
+        unreadMessagesCount = event.getCount();
+        getBottomBarFragment().setUnreadMessages(unreadMessagesCount);
     }
 
     @Override
@@ -753,12 +746,17 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
     }
 
     @Override
-    public void onChatsClick() { showChatListFragment(null); }
+    public void onChatsClick() {
+        showChatListFragment();
+        if (unreadMessagesCount > 0 && currentActiveFragment == ActiveFragment.CHATS){
+            if (getChatListFragment().getCurrentChatsState() == ChatListFragment.ChatListState.unread)
+                getChatListFragment().showChatListWithState(ChatListFragment.ChatListState.recent);
+            else getChatListFragment().showChatListWithState(ChatListFragment.ChatListState.unread);
+        }
+    }
 
     @Override
-    public void onContactsClick() {
-        showContactListFragment(null);
-    }
+    public void onContactsClick() { showContactListFragment(null);    }
 
     @Override
     public void onSettingsClick() {
@@ -800,21 +798,48 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
         startActivity(XabberAccountActivity.createIntent(this));
     }
 
+    private ContactListFragment getContactListFragment() {
+        if (getSupportFragmentManager().findFragmentByTag(CONTACT_LIST_TAG) != null){
+            return (ContactListFragment) getSupportFragmentManager().findFragmentByTag(CONTACT_LIST_TAG);
+        } else return ContactListFragment.newInstance(null);
+    }
+
+    private BottomBar getBottomBarFragment(){
+        if ((BottomBar) getSupportFragmentManager().findFragmentByTag(BOTTOM_BAR_TAG) != null){
+            return (BottomBar) getSupportFragmentManager().findFragmentByTag(BOTTOM_BAR_TAG);
+        } else return BottomBar.Companion.newInstance();
+    }
+
+    private ChatListFragment getChatListFragment(){
+        if ((ChatListFragment) getSupportFragmentManager().findFragmentByTag(CHAT_LIST_TAG) != null){
+            return (ChatListFragment) getSupportFragmentManager().findFragmentByTag(CHAT_LIST_TAG);
+        } else return ChatListFragment.newInstance(null);
+    }
+
+    private DiscoverFragment getDiscoverFragment(){
+        if (getSupportFragmentManager().findFragmentByTag(DISCOVER_TAG) != null){
+            return (DiscoverFragment) getSupportFragmentManager().findFragmentByTag(DISCOVER_TAG);
+        } else return DiscoverFragment.Companion.newInstance();
+    }
+
+    private CallsFragment getCallsFragment(){
+        if (getSupportFragmentManager().findFragmentByTag(CALLS_TAG) != null){
+            return (CallsFragment) getSupportFragmentManager().findFragmentByTag(CALLS_TAG);
+        } else  return CallsFragment.Companion.newInstance();
+    }
+
     private void showBottomNavigation() {
         if (!isFinishing()) {
-            if (bottomBar == null)
-                bottomBar = BottomBar.Companion.newInstance();
-
             FragmentTransaction fTrans = getSupportFragmentManager().beginTransaction();
-            fTrans.replace(R.id.containerBottomNavigation, bottomBar);
+            fTrans.replace(R.id.containerBottomNavigation, getBottomBarFragment(), BOTTOM_BAR_TAG);
             fTrans.commit();
+            if (currentActiveFragment != null) getBottomBarFragment().setColoredButton(currentActiveFragment);
         }
     }
 
     private void showMenuFragment() {
         if (!isFinishing()) {
             contentFragment = ContactListDrawerFragment.newInstance();
-
             FragmentTransaction fTrans = getSupportFragmentManager().beginTransaction();
             fTrans.replace(R.id.container, contentFragment);
             fTrans.commit();
@@ -823,54 +848,35 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
 
     private void showContactListFragment(@Nullable AccountJid account) {
         if (!isFinishing()) {
-            contentFragment = ContactListFragment.newInstance(account);
-
             FragmentTransaction fTrans = getSupportFragmentManager().beginTransaction();
-            fTrans.replace(R.id.container, contentFragment, CONTACT_LIST_TAG);
+            fTrans.replace(R.id.container, getContactListFragment(), CONTACT_LIST_TAG);
             fTrans.commit();
         }
     }
 
-    private void showChatListFragment(@Nullable AccountJid account) {
+    private void showChatListFragment() {
         if (!isFinishing()) {
-            if (fragmentToggle){
-                contentFragment = ChatListFragment.newInstance(account, false);
-                bottomBar.setChatStateIcon(ChatListFragment.ChatListState.recent);
-                fragmentToggle = !fragmentToggle;
-            }
-            else if ((unreadMessagesCount > 0) && (currentActiveFragment == ActiveFragment.CHATS)){
-                contentFragment = ChatListFragment.newInstance(account, true);
-                bottomBar.setChatStateIcon(ChatListFragment.ChatListState.unread);
-                fragmentToggle = !fragmentToggle;
-            }
-            else contentFragment = ChatListFragment.newInstance(account, false);
-
-
             FragmentTransaction fTrans = getSupportFragmentManager().beginTransaction();
-            fTrans.replace(R.id.container, contentFragment, CHAT_LIST_TAG);
+            fTrans.replace(R.id.container, getChatListFragment(), CHAT_LIST_TAG);
             fTrans.commit();
         }
     }
 
     private void showDiscoverFragment(){
         if (!isFinishing()){
-            contentFragment = DiscoverFragment.Companion.newInstance();
             FragmentTransaction ftrans = getSupportFragmentManager().beginTransaction();
-            ftrans.replace(R.id.container, contentFragment, DISCOVER_TAG);
+            ftrans.replace(R.id.container, getDiscoverFragment(), DISCOVER_TAG);
             ftrans.commit();
         }
     }
 
     private void showCallsFragment(){
         if (!isFinishing()){
-            contentFragment = CallsFragment.Companion.newInstance();
             FragmentTransaction ftrans = getSupportFragmentManager().beginTransaction();
-            ftrans.replace(R.id.container, contentFragment, CALLS_TAG);
+            ftrans.replace(R.id.container, getCallsFragment(), CALLS_TAG);
             ftrans.commit();
         }
     }
-
-
 
     @Override
     public void onAttachFragment(Fragment fragment) {
@@ -882,14 +888,7 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
             case "DiscoverFragment" : currentActiveFragment = ActiveFragment.DISCOVER; break;
             case "CallsFragment" : currentActiveFragment = ActiveFragment.CALLS; break;
         }
-        bottomBar.setColoredButton(currentActiveFragment);
-    }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onUnreadMessagesCountChanged(ContactListPresenter.UpdateUnreadCountEvent event) {
-        if (bottomBar != null)
-            unreadMessagesCount = event.getCount();
-            bottomBar.setUnreadMessages(unreadMessagesCount);
+        getBottomBarFragment().setColoredButton(currentActiveFragment);
     }
 
     public void setStatusBarColor(AccountJid account) {
@@ -912,7 +911,6 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
             if (requestCode == CODE_OPEN_CHAT &&
                     (currentState == (ContactListPresenter.ChatListState.unread)
                     || currentState == (ContactListPresenter.ChatListState.archived))) {
-                //((ContactListFragment) contentFragment).showRecent();
             }
         }
     }
@@ -923,10 +921,6 @@ public class ContactListActivity extends ManagedActivity implements OnAccountCha
 
     public void showShowcase(boolean show) {
         showcaseView.setVisibility(show ? View.VISIBLE : View.INVISIBLE);
-    }
-
-    public void closeSearch() {
-        //if (bottomBar != null) bottomBar.closeSearch(); need for ol menu
     }
 
     public enum ActiveFragment {
