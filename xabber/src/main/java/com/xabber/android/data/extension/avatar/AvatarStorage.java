@@ -18,6 +18,9 @@ import com.xabber.android.data.Application;
 import com.xabber.android.data.log.LogManager;
 import com.xabber.android.data.OnClearListener;
 import com.xabber.android.data.OnLoadListener;
+import com.xabber.xmpp.avatar.AvatarMetadataStore;
+
+import org.jxmpp.jid.EntityBareJid;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +61,7 @@ public class AvatarStorage implements OnLoadListener, OnClearListener {
         return new File(folder, hash);
     }
 
-    byte[] read(String hash) {
+    public byte[] read(String hash) {
         byte[] value;
         FileInputStream inputStream;
         try {
@@ -89,5 +92,13 @@ public class AvatarStorage implements OnLoadListener, OnClearListener {
         for (File file : folder.listFiles()) {
             file.delete();
         }
+    }
+
+    public boolean hasAvatarAvailable(EntityBareJid jid, String hash) {
+
+        return read(hash) != null;
+    }
+
+    public void setAvatarAvailable(EntityBareJid jid, String hash) {
     }
 }

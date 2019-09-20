@@ -32,6 +32,8 @@ import com.bumptech.glide.request.transition.Transition;
 import com.soundcloud.android.crop.Crop;
 import com.xabber.android.R;
 import com.xabber.android.data.Application;
+import com.xabber.android.data.account.AccountItem;
+import com.xabber.android.data.account.AccountManager;
 import com.xabber.android.data.log.LogManager;
 import com.xabber.android.data.entity.AccountJid;
 import com.xabber.android.data.extension.avatar.AvatarManager;
@@ -41,15 +43,21 @@ import com.xabber.android.data.extension.vcard.OnVCardSaveListener;
 import com.xabber.android.data.extension.vcard.VCardManager;
 import com.xabber.android.ui.activity.ChatActivity;
 import com.xabber.android.ui.helper.PermissionsRequester;
+import com.xabber.xmpp.avatar.UserAvatarManager;
 import com.xabber.xmpp.vcard.AddressProperty;
 import com.xabber.xmpp.vcard.TelephoneType;
 import com.xabber.xmpp.vcard.VCardProperty;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jxmpp.jid.Jid;
 
+import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -84,6 +92,7 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
 
     private VCard vCard;
     private AccountJid account;
+    private byte[] avatarData;
     private View progressBar;
     private boolean isSaveSuccess;
     private Listener listener;
@@ -560,6 +569,8 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
                                 final Uri rotatedImage = FileManager.saveImage(data, ROTATE_FILE_NAME);
                                 if (rotatedImage == null) return;
 
+                                //final Uri image = FileManager.saveImageNoRotation(data, "normal");
+
                                 Application.getInstance().runOnUiThread(new Runnable() {
                                     @Override
                                     public void run() {
@@ -662,11 +673,27 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
         if (removeAvatarFlag) {
             vCard.removeAvatar();
         } else if (newAvatarImageUri != null) {
+            //XEP-0084
+
             try {
+                avatarData = VCard.getBytes(new URL(newAvatarImageUri.toString()));
+                String sh1 = AvatarManager.getAvatarHash(avatarData);
+                AvatarManager.getInstance().onAvatarReceived(account.getFullJid().asBareJid(),sh1,avatarData, "xep");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+
+            //vCard.setAvatar((byte[]) null);
+            //Vcard:
+            /*try {
+                byte[] f = VCard.getBytes(new URL(newAvatarImageUri.toString()));
                 vCard.setAvatar(new URL(newAvatarImageUri.toString()));
             } catch (MalformedURLException e) {
                 LogManager.exception(this, e);
-            }
+            } catch (IOException e) {
+                e.printStackTrace();
+            }*/
         }
 
         vCard.setField(VCardProperty.BDAY.name(), getValueFromEditText(birthDate));
@@ -707,8 +734,30 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
         ChatActivity.hideKeyboard(getActivity());
         updateVCardFromFields();
         enableProgressMode(getString(R.string.saving));
+        saveAvatar();
         VCardManager.getInstance().saveVCard(account, vCard);
         isSaveSuccess = false;
+    }
+
+    private void saveAvatar(){
+        if(avatarData!=null){
+            AccountItem item = AccountManager.getInstance().getAccount(account);
+            UserAvatarManager mng = UserAvatarManager.getInstanceFor(item.getConnection());
+
+            try {
+                mng.publishAvatar(avatarData, 192,192);
+            } catch (XMPPException.XMPPErrorException e) {
+                e.printStackTrace();
+            } catch (PubSubException.NotALeafNodeException e) {
+                e.printStackTrace();
+            } catch (SmackException.NotConnectedException e) {
+                e.printStackTrace();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            } catch (SmackException.NoResponseException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     public void enableProgressMode(String message) {

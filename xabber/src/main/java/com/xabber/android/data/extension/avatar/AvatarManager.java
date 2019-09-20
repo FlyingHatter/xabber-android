@@ -41,26 +41,41 @@ import com.xabber.android.data.account.AccountManager;
 import com.xabber.android.data.connection.ConnectionItem;
 import com.xabber.android.data.connection.listeners.OnPacketListener;
 import com.xabber.android.data.database.sqlite.AvatarTable;
+import com.xabber.android.data.database.sqlite.AvatarXepTable;
 import com.xabber.android.data.entity.AccountJid;
 import com.xabber.android.data.entity.UserJid;
 import com.xabber.android.data.extension.vcard.VCardManager;
+import com.xabber.xmpp.avatar.UserAvatarManager;
 import com.xabber.android.data.log.LogManager;
 import com.xabber.android.data.roster.OnContactChangedListener;
 import com.xabber.android.data.roster.RosterContact;
 import com.xabber.android.ui.color.ColorManager;
+import com.xabber.xmpp.avatar.AvatarListener;
+import com.xabber.xmpp.avatar.Data;
+import com.xabber.xmpp.avatar.MetadataExtension;
 import com.xabber.xmpp.vcardupdate.VCardUpdate;
 
+import org.jivesoftware.smack.SmackException;
+import org.jivesoftware.smack.XMPPException;
 import org.jivesoftware.smack.packet.ExtensionElement;
 import org.jivesoftware.smack.packet.Presence;
 import org.jivesoftware.smack.packet.Stanza;
+import org.jivesoftware.smack.util.StringUtils;
+import org.jivesoftware.smackx.pubsub.LeafNode;
+import org.jivesoftware.smackx.pubsub.PayloadItem;
+import org.jivesoftware.smackx.pubsub.PubSubManager;
+import org.jxmpp.jid.EntityBareJid;
 import org.jxmpp.jid.Jid;
 import org.jxmpp.jid.impl.JidCreate;
 import org.jxmpp.stringprep.XmppStringprepException;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.logging.Level;
 
 /**
  * Provides information about avatars (hashes and values). Store and retrieve
@@ -90,6 +105,8 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
     private static AvatarManager instance;
 
     private final Application application;
+
+    private final Map<Jid, String> XEPHashes;
     /**
      * Map with hashes for specified users.
      * <p/>
@@ -119,6 +136,7 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
     private AvatarManager() {
         this.application = Application.getInstance();
 
+        XEPHashes = new HashMap<>();
         hashes = new HashMap<>();
         bitmaps = new HashMap<>();
         contactListDrawables = new HashMap<>();
@@ -205,6 +223,9 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
     public void onLoad() {
         final Map<Jid, String> hashes = new HashMap<>();
         final Map<String, Bitmap> bitmaps = new HashMap<>();
+        final Map<Jid, String> XEPHashes = new HashMap<>();
+
+        //vcard table
         Cursor cursor = AvatarTable.getInstance().list();
         try {
             if (cursor.moveToFirst()) {
@@ -213,6 +234,8 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
                     try {
                         Jid jid = JidCreate.from(AvatarTable.getUser(cursor));
                         hashes.put(jid, hash == null ? EMPTY_HASH : hash);
+                        //XEPHashes.put(jid, hash == null ? EMPTY_HASH : hash);
+                        //hashes.put(jid, hash == null ? EMPTY_HASH : hash);
                     } catch (XmppStringprepException e) {
                         LogManager.exception(this, e);
                     }
@@ -222,20 +245,48 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
         } finally {
             cursor.close();
         }
+
+        //xep-0084 table
+        cursor = AvatarXepTable.getInstance().list();
+        try {
+            if (cursor.moveToFirst()) {
+                do {
+                    String hash = AvatarXepTable.getHash(cursor);
+                    try {
+                        Jid jid = JidCreate.from(AvatarXepTable.getUser(cursor));
+                        XEPHashes.put(jid, hash == null ? EMPTY_HASH : hash);
+                        //hashes.put(jid, hash == null ? EMPTY_HASH : hash);
+                    } catch (XmppStringprepException e) {
+                        LogManager.exception(this, e);
+                    }
+
+                } while (cursor.moveToNext());
+            }
+        } finally {
+            cursor.close();
+        }
+
         for (String hash : new HashSet<>(hashes.values()))
             if (!hash.equals(EMPTY_HASH)) {
                 Bitmap bitmap = makeBitmap(AvatarStorage.getInstance().read(hash));
                 bitmaps.put(hash, bitmap == null ? EMPTY_BITMAP : bitmap);
             }
+        for (String hash : new HashSet<>(XEPHashes.values()))
+            if (!hash.equals(EMPTY_HASH)) {
+                Bitmap bitmap = makeBitmap(AvatarStorage.getInstance().read(hash));
+                bitmaps.put(hash, bitmap == null ? EMPTY_BITMAP : bitmap);
+            }
+
         Application.getInstance().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                onLoaded(hashes, bitmaps);
+                onLoaded(XEPHashes, hashes, bitmaps);
             }
         });
     }
 
-    private void onLoaded(Map<Jid, String> hashes, Map<String, Bitmap> bitmaps) {
+    private void onLoaded(Map<Jid, String> XEPHashes, Map<Jid, String> hashes, Map<String, Bitmap> bitmaps) {
+        this.XEPHashes.putAll(XEPHashes);
         this.hashes.putAll(hashes);
         this.bitmaps.putAll(bitmaps);
         for (OnContactChangedListener onContactChangedListener : Application
@@ -262,6 +313,18 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
         });
     }
 
+    private void setXEPHash(final Jid jid, final String hash) {
+        XEPHashes.put(jid, hash == null ? EMPTY_HASH : hash);
+        contactListDrawables.remove(jid);
+        contactListDefaultDrawables.remove(jid);
+        application.runInBackground(new Runnable() {
+            @Override
+            public void run() {
+                AvatarXepTable.getInstance().write(jid.toString(), hash);
+            }
+        });
+    }
+
     /**
      * Get avatar's value for user.
      *
@@ -270,11 +333,16 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
      * avatar or avatar doesn't exists.
      */
     private Bitmap getBitmap(Jid jid) {
+        String xepHash = getXEPHash(jid);
         String hash = getHash(jid);
-        if (hash == null || hash.equals(EMPTY_HASH)) {
-            return null;
-        }
-        Bitmap bitmap = bitmaps.get(hash);
+        Bitmap bitmap;
+
+        if (xepHash == null || xepHash.equals(EMPTY_HASH)) {
+            if (hash == null || hash.equals(EMPTY_HASH)) {
+                return null;
+            } else bitmap = bitmaps.get(hash);
+        } else bitmap = bitmaps.get(xepHash);
+
         if (bitmap == EMPTY_BITMAP) {
             return null;
         } else {
@@ -285,6 +353,11 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
     @Nullable
     public String getHash(Jid bareAddress) {
         return hashes.get(bareAddress);
+    }
+
+    @Nullable
+    public String getXEPHash(Jid bareAddress) {
+        return XEPHashes.get(bareAddress);
     }
 
     /**
@@ -492,16 +565,80 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
      * @param hash
      * @param value
      */
-    public void onAvatarReceived(Jid jid, String hash, byte[] value) {
-        setValue(hash, value);
-        setHash(jid, hash);
+    public void onAvatarReceived(Jid jid, String hash, byte[] value, String type) {
+        if(type.equals("vcard")){
+            setValue(hash, value);
+            setHash(jid, hash);
+        }else{
+            //XEP-0084-avi
+            setValue(hash, value);
+            setXEPHash(jid, hash);
+        }
+    }
+
+
+
+
+
+    public static String getAvatarHash(byte[] bytes) {
+        if (bytes == null) {
+            return null;
+        }
+
+        MessageDigest digest;
+        try {
+            digest = MessageDigest.getInstance("SHA-1");
+        }
+        catch (NoSuchAlgorithmException e) {
+            return null;
+        }
+
+        digest.update(bytes);
+        return StringUtils.encodeHex(digest.digest());
     }
 
     @Override
     public void onStanza(ConnectionItem connection, Stanza stanza) {
+        /*PubSubManager psm = PubSubManager.getInstance(connection.getConnection());
+        try {
+            psm.createNode("urn:xmpp:avatar:data");
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        try {
+
+        //URI: file:///data/user/0/com.xabber.android.beta/cache/cropped
+        //URL to byte      byte[] f = VCard.getBytes(new URL(^));
+        //to 64 converter: encodedfile = new String(Base64.encodeBase64(bytes), "UTF-8"); = photohash
+        //getAvatarHash(byte) ; = shaHash
+
+            LeafNode node;
+            node = psm.getNode("urn:xmpp:avatar:data");
+            Data data = new Data();
+            data.setPhotoHash("qANQR1DBwU4DX7jmYZnncm");
+            data.setShaHash("111f4b3c50d7b0df729d299bc6f8e9ef9066971f");
+            node.send(new PayloadItem("111f4b3c50d7b0df729d299bc6f8e9ef9066971f", data));
+        } catch (SmackException.NoResponseException e) {
+            e.printStackTrace();
+        } catch (XMPPException.XMPPErrorException e) {
+            e.printStackTrace();
+        } catch (SmackException.NotConnectedException e) {
+            e.printStackTrace();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }*/
+
         if (!(stanza instanceof Presence)) {
             return;
         }
+
+
 
         AccountJid account = ((AccountItem) connection).getAccount();
         Presence presence = (Presence) stanza;
