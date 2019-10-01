@@ -88,7 +88,8 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
     public static final int KB_SIZE_IN_BYTES = 1024;
     public static final String DATE_FORMAT = "yyyy-mm-dd";
     public static final String DATE_FORMAT_INT_TO_STRING = "%d-%02d-%02d";
-    public static final int MAX_IMAGE_SIZE = 512;
+    public static final int MAX_IMAGE_SIZE = 1024;
+    public static final int MAX_TEST = 256;
 
     private VCard vCard;
     private AccountJid account;
@@ -565,7 +566,6 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
                                 resource.compress(Bitmap.CompressFormat.PNG, 100, stream);
                                 byte[] data = stream.toByteArray();
                                 resource.recycle();
-
                                 final Uri rotatedImage = FileManager.saveImage(data, ROTATE_FILE_NAME);
                                 if (rotatedImage == null) return;
 
@@ -602,8 +602,16 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
         }
         Crop.of(srcUri, newAvatarImageUri)
                 .asSquare()
-                .withMaxSize(MAX_AVATAR_SIZE_PIXELS, MAX_AVATAR_SIZE_PIXELS)
+                .withMaxSize(MAX_TEST, MAX_TEST)
                 .start(activity);
+        /*Crop.of(srcUri, newAvatarImageUri)
+                .asSquare()
+                .withMaxSize(MAX_IMAGE_SIZE, MAX_IMAGE_SIZE)
+                .start(activity);*/
+        /*Crop.of(srcUri, newAvatarImageUri)
+                .asSquare()
+                .withMaxSize(MAX_AVATAR_SIZE_PIXELS, MAX_AVATAR_SIZE_PIXELS)
+                .start(activity);*/
     }
 
     private void handleCrop(int resultCode, Intent result) {
@@ -734,6 +742,12 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
         ChatActivity.hideKeyboard(getActivity());
         updateVCardFromFields();
         enableProgressMode(getString(R.string.saving));
+        /*Application.getInstance().runInBackground(new Runnable() {
+            @Override
+            public void run() {
+                saveAvatar();
+            }
+        });*/
         saveAvatar();
         VCardManager.getInstance().saveVCard(account, vCard);
         isSaveSuccess = false;
@@ -745,7 +759,9 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
             UserAvatarManager mng = UserAvatarManager.getInstanceFor(item.getConnection());
 
             try {
-                mng.publishAvatar(avatarData, 192,192);
+                //mng.publishAvatar(avatarData, 255, 255);
+                //mng.publishAvatar(avatarData, 256, 256);
+                mng.publishAvatar(avatarData, MAX_TEST, MAX_TEST);
             } catch (XMPPException.XMPPErrorException e) {
                 e.printStackTrace();
             } catch (PubSubException.NotALeafNodeException e) {
