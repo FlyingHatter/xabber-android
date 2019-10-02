@@ -292,13 +292,14 @@ public class ContactAddFragment extends GroupEditorFragment
         }
 
         int atChar = contactString.indexOf('@');
-        String domainName = contactString.substring(atChar);
-        String localName = contactString.substring(0, atChar);
 
         if (atChar<=0) {
             setError(getString(R.string.INCORRECT_USER_NAME));
             return;
         }
+
+        String domainName = contactString.substring(atChar);
+        String localName = contactString.substring(0, atChar);
 
         if (domainName.charAt(domainName.length()-1)=='.' || domainName.charAt(0)=='.'){
             setError(getString(R.string.INCORRECT_USER_NAME));

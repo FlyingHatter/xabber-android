@@ -201,13 +201,14 @@ public class AccountAddFragment extends Fragment implements View.OnClickListener
         }
 
         int atChar = contactString.indexOf('@');
-        String domainName = contactString.substring(atChar);
-        String localName = contactString.substring(0, atChar);
 
         if (atChar<=0) {
             Toast.makeText(getActivity(), getString(R.string.INCORRECT_USER_NAME), Toast.LENGTH_LONG).show();
             return false;
         }
+
+        String domainName = contactString.substring(atChar);
+        String localName = contactString.substring(0, atChar);
 
         if (domainName.charAt(domainName.length()-1)=='.' || domainName.charAt(0)=='.'){
             Toast.makeText(getActivity(), getString(R.string.INCORRECT_USER_NAME), Toast.LENGTH_LONG).show();
