@@ -176,6 +176,34 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
         return BitmapFactory.decodeByteArray(value, 0, value.length, resultOptions);
     }
 
+    private static Bitmap makeXEPBitmap(byte[] value) {
+        int MAX_SIZE = 512;
+
+        if (value == null) {
+            return null;
+        }
+
+        // Load only size values
+        BitmapFactory.Options sizeOptions = new BitmapFactory.Options();
+        sizeOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(value, 0, value.length, sizeOptions);
+
+        // Calculate factor to down scale image
+        int scale = 1;
+        int width_tmp = sizeOptions.outWidth;
+        int height_tmp = sizeOptions.outHeight;
+        while (width_tmp / 2 >= MAX_SIZE && height_tmp / 2 >= MAX_SIZE) {
+            scale *= 2;
+            width_tmp /= 2;
+            height_tmp /= 2;
+        }
+
+        // Load image
+        BitmapFactory.Options resultOptions = new BitmapFactory.Options();
+        resultOptions.inSampleSize = scale;
+        return BitmapFactory.decodeByteArray(value, 0, value.length, resultOptions);
+    }
+
     public static Bitmap drawableToBitmap(Drawable drawable) {
         if (drawable instanceof BitmapDrawable) {
             return ((BitmapDrawable) drawable).getBitmap();
@@ -273,7 +301,7 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
             }
         for (String hash : new HashSet<>(XEPHashes.values()))
             if (!hash.equals(EMPTY_HASH)) {
-                Bitmap bitmap = makeBitmap(AvatarStorage.getInstance().read(hash));
+                Bitmap bitmap = makeXEPBitmap(AvatarStorage.getInstance().read(hash));
                 bitmaps.put(hash, bitmap == null ? EMPTY_BITMAP : bitmap);
             }
 
@@ -365,12 +393,18 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
      *
      * @param hash
      * @param value
+     * @param type
      */
-    private void setValue(final String hash, final byte[] value) {
+    private void setValue(final String hash, final byte[] value, String type) {
         if (hash == null) {
             return;
         }
-        Bitmap bitmap = makeBitmap(value);
+        Bitmap bitmap;
+        if (type.equals("vcard")){
+            bitmap = makeBitmap(value);
+        }else {
+            bitmap = makeXEPBitmap(value);
+        }
         bitmaps.put(hash, bitmap == null ? EMPTY_BITMAP : bitmap);
         application.runInBackground(new Runnable() {
             @Override
@@ -567,11 +601,11 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
      */
     public void onAvatarReceived(Jid jid, String hash, byte[] value, String type) {
         if(type.equals("vcard")){
-            setValue(hash, value);
+            setValue(hash, value, type);
             setHash(jid, hash);
         }else{
             //XEP-0084-avi
-            setValue(hash, value);
+            setValue(hash, value, type);
             setXEPHash(jid, hash);
         }
     }

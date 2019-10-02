@@ -94,6 +94,7 @@ public final class UserAvatarManager extends Manager {
         super(connection);
         this.pepManager = PEPManager.getInstanceFor(connection);
         this.serviceDiscoveryManager = ServiceDiscoveryManager.getInstanceFor(connection);
+        connection.setReplyTimeout(120000);
     }
 
     /**

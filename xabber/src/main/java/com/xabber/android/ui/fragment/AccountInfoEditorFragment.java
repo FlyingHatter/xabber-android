@@ -5,6 +5,7 @@ import android.app.DatePickerDialog;
 import android.app.Fragment;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Bundle;
@@ -50,6 +51,7 @@ import com.xabber.xmpp.vcard.VCardProperty;
 
 import org.jivesoftware.smack.SmackException;
 import org.jivesoftware.smack.XMPPException;
+import org.jivesoftware.smack.util.stringencoder.Base64;
 import org.jivesoftware.smackx.pubsub.PubSubException;
 import org.jivesoftware.smackx.vcardtemp.packet.VCard;
 import org.jxmpp.jid.Jid;
@@ -89,7 +91,7 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
     public static final String DATE_FORMAT = "yyyy-mm-dd";
     public static final String DATE_FORMAT_INT_TO_STRING = "%d-%02d-%02d";
     public static final int MAX_IMAGE_SIZE = 1024;
-    public static final int MAX_TEST = 256;
+    public static final int MAX_TEST = 720;
 
     private VCard vCard;
     private AccountJid account;
@@ -563,7 +565,8 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
                             @Override
                             public void run() {
                                 ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                                resource.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                //resource.compress(Bitmap.CompressFormat.PNG, 100, stream);
+                                resource.compress(Bitmap.CompressFormat.JPEG, 95, stream);
                                 byte[] data = stream.toByteArray();
                                 resource.recycle();
                                 final Uri rotatedImage = FileManager.saveImage(data, ROTATE_FILE_NAME);
@@ -761,6 +764,10 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
             try {
                 //mng.publishAvatar(avatarData, 255, 255);
                 //mng.publishAvatar(avatarData, 256, 256);
+                /*Bitmap bitmap = BitmapFactory.decodeByteArray(avatarData, 0, avatarData.length);
+                String photoHash = Base64.encodeToString(avatarData);
+                int i = photoHash.length();*/
+                //
                 mng.publishAvatar(avatarData, MAX_TEST, MAX_TEST);
             } catch (XMPPException.XMPPErrorException e) {
                 e.printStackTrace();
