@@ -209,7 +209,7 @@ public class ContactAddFragment extends GroupEditorFragment
                 Toast.makeText(getActivity(), "Scanned = " + result.getContents(), Toast.LENGTH_LONG).show();
                 if(result.getContents().length()>5) {
                     String[] s = result.getContents().split(":");
-                    if (s[0].equals("xmpp") && s.length >= 2) {
+                    if ((s[0].equals("xmpp") || s[0].equals("xabber")) && s.length >= 2) {
                         userView.setText(s[1]);
                         nameView.requestFocus();
                     }
@@ -293,6 +293,7 @@ public class ContactAddFragment extends GroupEditorFragment
 
         int atChar = contactString.indexOf('@');
         String domainName = contactString.substring(atChar);
+        String localName = contactString.substring(0, atChar);
 
         if (atChar<=0) {
             setError(getString(R.string.INCORRECT_USER_NAME));
@@ -300,6 +301,11 @@ public class ContactAddFragment extends GroupEditorFragment
         }
 
         if (domainName.charAt(domainName.length()-1)=='.' || domainName.charAt(0)=='.'){
+            setError(getString(R.string.INCORRECT_USER_NAME));
+            return;
+        }
+
+        if (localName.charAt(localName.length()-1)=='.' || localName.charAt(0)=='.'){
             setError(getString(R.string.INCORRECT_USER_NAME));
             return;
         }
