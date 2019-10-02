@@ -71,7 +71,7 @@ public class ReferencesProvider extends ExtensionElementProvider<ReferenceElemen
             }
         }
 
-        int begin = 0, end = 0;
+        int begin = 0, end = -1;
         if (beginS != null && !beginS.isEmpty()) begin = Integer.valueOf(beginS);
         if (endS != null && !endS.isEmpty()) end = Integer.valueOf(endS);
 
