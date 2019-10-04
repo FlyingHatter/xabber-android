@@ -8,12 +8,13 @@
     android:layout_height="44dp"
     android:clickable="true"
     android:focusable="true"
-    android:background="?attr/selectableItemBackgroundBorderless">
+    android:background="@color/transparent">
 
     <RelativeLayout
         android:layout_width="32dp"
         android:layout_height="32dp"
-        android:layout_centerInParent="true">
+        android:layout_centerInParent="true"
+        android:background="@color/transparent">
 
         <de.hdodenhof.circleimageview.CircleImageView
             android:id="@+id/ivAvatar"
@@ -21,7 +22,8 @@
             android:layout_height="40dp"
             app:civ_circle_background_color="@color/white"
             tools:src="@tools:sample/avatars"
-            />
+            app:civ_border_width="2dp"
+            app:civ_border_color="@color/transparent"/>
 
         <ImageView
             android:id="@+id/ivStatus"
@@ -40,6 +42,13 @@
             android:src="@drawable/ic_status"
             android:visibility="gone"
             />
+
+        <de.hdodenhof.circleimageview.CircleImageView
+            android:id="@+id/ivAvatarOverlay"
+            android:layout_width="40dp"
+            android:src="@drawable/ic_stripes"
+            android:layout_height="40dp"
+            android:visibility="gone"/>
 
     </RelativeLayout>
 

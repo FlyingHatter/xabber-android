@@ -60,12 +60,12 @@ public class MetadataInfo {
         this.url = url;
         this.bytes = Math.toIntExact(bytes);
         this.type = StringUtils.requireNotNullOrEmpty(type, "Content Type is required.");
-        if (pixelsHeight < 0 || pixelsHeight > MAX_HEIGHT) {
-            throw new IllegalArgumentException("Image height value must be between 0 and 65536.");
-        }
-        if (pixelsWidth < 0 || pixelsWidth > MAX_WIDTH) {
-            throw new IllegalArgumentException("Image width value must be between 0 and 65536.");
-        }
+        //if (pixelsHeight < 0 || pixelsHeight > MAX_HEIGHT) {
+        //    throw new IllegalArgumentException("Image height value must be between 0 and 65536.");
+        //}
+        //if (pixelsWidth < 0 || pixelsWidth > MAX_WIDTH) {
+        //    throw new IllegalArgumentException("Image width value must be between 0 and 65536.");
+        //}
         this.height = (short) pixelsHeight;
         this.width = (short) pixelsWidth;
     }

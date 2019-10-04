@@ -261,8 +261,14 @@ public final class UserAvatarManager extends Manager {
     public byte[] fetchAvatarFromPubSub(EntityBareJid from, MetadataInfo metadataInfo)
             throws InterruptedException, PubSubException.NotALeafNodeException, NoResponseException,
             NotConnectedException, XMPPErrorException {
+        LeafNode dataNode = PubSubManager.getInstance(connection(), null)
+                .getLeafNode(DATA_NAMESPACE);
+
+/*
         LeafNode dataNode = PubSubManager.getInstance(connection(), from)
                 .getLeafNode(DATA_NAMESPACE);
+*/
+
 
         List<PayloadItem<DataExtension>> dataItems = dataNode.getItems(1, metadataInfo.getId());
         DataExtension extension = dataItems.get(0).getPayload();
@@ -434,12 +440,12 @@ public final class UserAvatarManager extends Manager {
                                 e.printStackTrace();
                             }
                         }
-                    } else if (payloadItem.getPayload() instanceof DataExtension){
+                    }/* else if (payloadItem.getPayload() instanceof DataExtension){
                         DataExtension dataExtension = (DataExtension) payloadItem.getPayload();
                         byte[] avatar = dataExtension.getData();
                         String sh1 = AvatarManager.getAvatarHash(avatar);
                         AvatarManager.getInstance().onAvatarReceived(from, sh1, avatar, "xep");
-                    }
+                    }*/
                 }
             }
         }

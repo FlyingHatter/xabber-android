@@ -146,6 +146,7 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
     private ImageView avatar;
     private TextView avatarSize;
     private View changeAvatarButton;
+    private View saveAvatarButton;
     private Uri newAvatarImageUri;
     private Uri photoFileUri;
     private boolean removeAvatarFlag = false;
@@ -239,6 +240,14 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
                                                   }
                                               }
         );
+        saveAvatarButton = view.findViewById(R.id.saveAvatarButton);
+        saveAvatarButton.setVisibility(View.GONE);
+        saveAvatarButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                saveAvatar();
+            }
+        });
 
         birthDate = (TextView) view.findViewById(R.id.vcard_birth_date);
         birthDate.setOnClickListener(new View.OnClickListener() {
@@ -653,6 +662,8 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
                 return;
             }
 
+            saveAvatarButton.setVisibility(View.VISIBLE);
+
             avatarSize.setVisibility(View.VISIBLE);
             if (listener != null) {
                 listener.enableSave();
@@ -702,7 +713,7 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
                 avatarData = VCard.getBytes(new URL(newAvatarImageUri.toString()));
                 String sh1 = AvatarManager.getAvatarHash(avatarData);
                 AvatarManager.getInstance().onAvatarReceived(account.getFullJid().asBareJid(),sh1,avatarData, "xep");
-                vCard.removeAvatar();
+                //vCard.removeAvatar();
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -768,38 +779,38 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
     }
 
     private void saveAvatar(){
-        if(avatarData!=null){
-            Application.getInstance().runInBackgroundUserRequest(new Runnable() {
-                @Override
-                public void run() {
-                    AccountItem item = AccountManager.getInstance().getAccount(account);
-                    UserAvatarManager mng = UserAvatarManager.getInstanceFor(item.getConnection());
-                    try {
-                        //mng.publishAvatar(avatarData, MAX_TEST, MAX_TEST);
-                        mng.publishAvatarjpg(avatarData, MAX_TEST, MAX_TEST);
-                        isAvatarSuccessful = true;
-                    } catch (XMPPException.XMPPErrorException | PubSubException.NotALeafNodeException |
-                            SmackException.NotConnectedException | InterruptedException | SmackException.NoResponseException e) {
-                        e.printStackTrace();
-                    }
+        try {
+            avatarData = VCard.getBytes(new URL(newAvatarImageUri.toString()));
+            String sh1 = AvatarManager.getAvatarHash(avatarData);
+            AvatarManager.getInstance().onAvatarReceived(account.getFullJid().asBareJid(),sh1,avatarData, "xep");
+            //vCard.removeAvatar();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if(avatarData!=null) {
 
-                    final boolean isSuccessfulFinal = isAvatarSuccessful;
-                    Application.getInstance().runOnUiThread(new Runnable() {
+            AccountItem item = AccountManager.getInstance().getAccount(account);
+            UserAvatarManager mng = UserAvatarManager.getInstanceFor(item.getConnection());
+            try {
+                //mng.publishAvatar(avatarData, MAX_TEST, MAX_TEST);
+                mng.publishAvatarjpg(avatarData, MAX_TEST, MAX_TEST);
+                isAvatarSuccessful = true;
+            } catch (XMPPException.XMPPErrorException | PubSubException.NotALeafNodeException |
+                    SmackException.NotConnectedException | InterruptedException | SmackException.NoResponseException e) {
+                e.printStackTrace();
+            }
+
+            final boolean isSuccessfulFinal = isAvatarSuccessful;
+                    /*Application.getInstance().runOnUiThread(new Runnable() {
                         @Override
-                        public void run() {
-                            if(isSuccessfulFinal) {
-                                Toast.makeText(getActivity(), "Avatar published! Saving vCard in progress...", Toast.LENGTH_LONG).show();
-                                //VCardManager.getInstance().saveVCard(account, vCard);
-                                disableProgressMode();
-                            }
-                            else {
-                                Toast.makeText(getActivity(), "Avarar publishing failed", Toast.LENGTH_LONG).show();
-                                disableProgressMode();
-                            }
-                        }
-                    });
-                }
-            });
+                        public void run() {*/
+            if (isSuccessfulFinal) {
+                Toast.makeText(getActivity(), "Avatar published!", Toast.LENGTH_LONG).show();
+                //VCardManager.getInstance().saveVCard(account, vCard);
+            } else {
+                Toast.makeText(getActivity(), "Avarar publishing failed", Toast.LENGTH_LONG).show();
+            }
+
 
         }
     }
@@ -860,7 +871,7 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
         }
 
 
-        if (isSaveSuccess&&isAvatarSuccessful) {
+        if (isSaveSuccess) {
             Toast.makeText(getActivity(), getString(R.string.account_user_info_save_success), Toast.LENGTH_LONG).show();
             isSaveSuccess = false;
 
@@ -869,8 +880,6 @@ public class AccountInfoEditorFragment extends Fragment implements OnVCardSaveLi
             getActivity().setResult(Activity.RESULT_OK, data);
 
             getActivity().finish();
-        } else if(isSaveSuccess){
-
         } else {
             disableProgressMode();
             this.vCard = vCard;
