@@ -165,7 +165,6 @@ public class ReferencesManager {
         int end = reference.getEnd();
         if (end >= chars.length) end = chars.length - 1;
         if (begin > end) return chars;
-
         switch (reference.getType()) {
             case media:
                 chars = remove(begin, end, chars);
@@ -174,6 +173,7 @@ public class ReferencesManager {
                 chars = remove(begin, end, chars);
                 break;
             case groupchat:
+                if (begin == end && begin == 0) return chars;
                 chars = remove(begin, end, chars);
                 break;
             case markup:

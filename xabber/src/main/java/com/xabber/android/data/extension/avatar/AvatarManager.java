@@ -177,7 +177,7 @@ public class AvatarManager implements OnLoadListener, OnLowMemoryListener, OnPac
     }
 
     private static Bitmap makeXEPBitmap(byte[] value) {
-        int MAX_SIZE = 512;
+        //int MAX_SIZE = 512;
 
         if (value == null) {
             return null;

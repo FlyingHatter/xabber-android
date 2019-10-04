@@ -94,7 +94,7 @@ public final class UserAvatarManager extends Manager {
         super(connection);
         this.pepManager = PEPManager.getInstanceFor(connection);
         this.serviceDiscoveryManager = ServiceDiscoveryManager.getInstanceFor(connection);
-        connection.setReplyTimeout(120000);
+        //connection.setReplyTimeout(120000);
     }
 
     /**
@@ -187,7 +187,7 @@ public final class UserAvatarManager extends Manager {
      */
     private LeafNode getOrCreateMetadataNode()
             throws NoResponseException, NotConnectedException, InterruptedException, XMPPErrorException, PubSubException.NotALeafNodeException {
-        return PubSubManager.getInstance(connection()).getOrCreateLeafNode(METADATA_NAMESPACE);
+        return PubSubManager.getInstance(connection(), null).getOrCreateLeafNode(METADATA_NAMESPACE);
     }
 
     /**
@@ -207,6 +207,25 @@ public final class UserAvatarManager extends Manager {
             InterruptedException, NoResponseException {
         String id = publishAvatarData(data);
         publishAvatarMetadata(id, data.length, "image/png", height, width);
+    }
+
+    /**
+     * Publish a JPG Avatar and its metadata to PubSub.
+     *
+     * @param data
+     * @param height
+     * @param width
+     * @throws XMPPErrorException
+     * @throws PubSubException.NotALeafNodeException
+     * @throws NotConnectedException
+     * @throws InterruptedException
+     * @throws NoResponseException
+     */
+    public void publishAvatarjpg(byte[] data, int height, int width)
+            throws XMPPErrorException, PubSubException.NotALeafNodeException, NotConnectedException,
+            InterruptedException, NoResponseException {
+        String id = publishAvatarData(data);
+        publishAvatarMetadata(id, data.length, "image/jpeg", height, width);
     }
 
     /**
