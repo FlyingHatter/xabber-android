@@ -20,6 +20,27 @@ import android.os.Build;
 
 import androidx.annotation.RequiresApi;
 
+import com.xabber.android.data.extension.avatar.AvatarManager;
+
+import org.jivesoftware.smack.Manager;
+import org.jivesoftware.smack.SmackException.NoResponseException;
+import org.jivesoftware.smack.SmackException.NotConnectedException;
+import org.jivesoftware.smack.XMPPConnection;
+import org.jivesoftware.smack.XMPPException.XMPPErrorException;
+import org.jivesoftware.smack.packet.ExtensionElement;
+import org.jivesoftware.smack.packet.Message;
+import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
+import org.jivesoftware.smackx.pep.PEPListener;
+import org.jivesoftware.smackx.pep.PEPManager;
+import org.jivesoftware.smackx.pubsub.EventElement;
+import org.jivesoftware.smackx.pubsub.EventElementType;
+import org.jivesoftware.smackx.pubsub.ItemsExtension;
+import org.jivesoftware.smackx.pubsub.LeafNode;
+import org.jivesoftware.smackx.pubsub.PayloadItem;
+import org.jivesoftware.smackx.pubsub.PubSubException;
+import org.jivesoftware.smackx.pubsub.PubSubManager;
+import org.jxmpp.jid.EntityBareJid;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -33,29 +54,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
-
-import org.jivesoftware.smack.Manager;
-import org.jivesoftware.smack.SmackException.NoResponseException;
-import org.jivesoftware.smack.SmackException.NotConnectedException;
-import org.jivesoftware.smack.XMPPConnection;
-import org.jivesoftware.smack.XMPPException.XMPPErrorException;
-import org.jivesoftware.smack.packet.ExtensionElement;
-import org.jivesoftware.smack.packet.Message;
-import org.jivesoftware.smack.util.SHA1;
-import org.jivesoftware.smack.util.stringencoder.Base64;
-import org.jivesoftware.smackx.disco.ServiceDiscoveryManager;
-import org.jivesoftware.smackx.pep.PEPListener;
-import org.jivesoftware.smackx.pep.PEPManager;
-import org.jivesoftware.smackx.pubsub.EventElement;
-import org.jivesoftware.smackx.pubsub.EventElementType;
-import org.jivesoftware.smackx.pubsub.ItemsExtension;
-import org.jivesoftware.smackx.pubsub.LeafNode;
-import org.jivesoftware.smackx.pubsub.PayloadItem;
-import org.jivesoftware.smackx.pubsub.PubSubException;
-import org.jivesoftware.smackx.pubsub.PubSubManager;
-import com.xabber.android.data.extension.avatar.AvatarManager;
-
-import org.jxmpp.jid.EntityBareJid;
 
 
 public final class UserAvatarManager extends Manager {
@@ -221,7 +219,7 @@ public final class UserAvatarManager extends Manager {
      * @throws InterruptedException
      * @throws NoResponseException
      */
-    public void publishAvatarjpg(byte[] data, int height, int width)
+    public void publishAvatarJPG(byte[] data, int height, int width)
             throws XMPPErrorException, PubSubException.NotALeafNodeException, NotConnectedException,
             InterruptedException, NoResponseException {
         String id = publishAvatarData(data);
@@ -278,12 +276,48 @@ public final class UserAvatarManager extends Manager {
         return extension.getData();
     }
 
-    private String publishAvatarData(byte[] data)
+    public String publishAvatarData(byte[] data)
             throws NoResponseException, NotConnectedException, XMPPErrorException, InterruptedException, PubSubException.NotALeafNodeException {
-        String itemId = Base64.encodeToString(SHA1.bytes(data));
+        //String itemId = Base64.encodeToString(SHA1.bytes(data));
+        //String s = Base64.encodeToString(data);
+        //String test = encryptThisByte(data);
+        String itemId = AvatarManager.getAvatarHash(data);
+        //itemId = itemId.toLowerCase();
         publishAvatarData(data, itemId);
         return itemId;
     }
+
+    /*public static String encryptThisByte(byte[] input)
+    {
+        try {
+            // getInstance() method is called with algorithm SHA-1
+            MessageDigest md = MessageDigest.getInstance("SHA-1");
+
+            // digest() method is called
+            // to calculate message digest of the input string
+            // returned as array of byte
+            byte[] messageDigest = md.digest(input);
+
+            // Convert byte array into signum representation
+            BigInteger no = new BigInteger(1, messageDigest);
+
+            // Convert message digest into hex value
+            String hashtext = no.toString(16);
+
+            // Add preceding 0s to make it 32 bit
+            while (hashtext.length() < 32) {
+                hashtext = "0" + hashtext;
+            }
+
+            // return the HashText
+            return hashtext;
+        }
+
+        // For specifying wrong message digest algorithms
+        catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+    }*/
 
     private void publishAvatarData(byte[] data, String itemId)
             throws NoResponseException, NotConnectedException, XMPPErrorException, InterruptedException, PubSubException.NotALeafNodeException {
@@ -440,12 +474,12 @@ public final class UserAvatarManager extends Manager {
                                 e.printStackTrace();
                             }
                         }
-                    }/* else if (payloadItem.getPayload() instanceof DataExtension){
+                    } else if (payloadItem.getPayload() instanceof DataExtension){
                         DataExtension dataExtension = (DataExtension) payloadItem.getPayload();
                         byte[] avatar = dataExtension.getData();
                         String sh1 = AvatarManager.getAvatarHash(avatar);
                         AvatarManager.getInstance().onAvatarReceived(from, sh1, avatar, "xep");
-                    }*/
+                    }
                 }
             }
         }

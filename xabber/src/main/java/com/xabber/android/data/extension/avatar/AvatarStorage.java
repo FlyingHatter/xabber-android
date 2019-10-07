@@ -15,10 +15,9 @@
 package com.xabber.android.data.extension.avatar;
 
 import com.xabber.android.data.Application;
-import com.xabber.android.data.log.LogManager;
 import com.xabber.android.data.OnClearListener;
 import com.xabber.android.data.OnLoadListener;
-import com.xabber.xmpp.avatar.AvatarMetadataStore;
+import com.xabber.android.data.log.LogManager;
 
 import org.jxmpp.jid.EntityBareJid;
 
@@ -95,7 +94,6 @@ public class AvatarStorage implements OnLoadListener, OnClearListener {
     }
 
     public boolean hasAvatarAvailable(EntityBareJid jid, String hash) {
-
         return read(hash) != null;
     }
 
