@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/grey_500"
+    android:elevation="@dimen/design_snackbar_elevation"
+    android:orientation="horizontal">
+
+    <FrameLayout
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent">
+
+        <ProgressBar
+            android:id="@+id/snackbar_progress_bar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_gravity="center"
+            android:indeterminate="false"
+            android:indeterminateDrawable="@drawable/circular_progress_bar_small"
+            android:max="100"
+            android:padding="4dp"
+
+            android:progress="33"
+            android:progressDrawable="@drawable/circular_progress_bar" />
+
+        <TextView
+            android:id="@+id/snackbar_progress_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="5"
+            android:textColor="@color/white" />
+
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/snackbar_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|left|start"
+        android:layout_weight="5"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:paddingLeft="12dp"
+        android:paddingTop="14dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="14dp"
+        android:text="snackbar message"
+        android:textAppearance="@style/TextAppearance.Design.Snackbar.Message"
+        android:textColor="@color/white" />
+
+    <Button
+        android:id="@+id/snackbar_action"
+        style="?attr/borderlessButtonStyle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginLeft="24dp"
+        android:layout_weight="1"
+        android:paddingLeft="12dp"
+        android:paddingTop="14dp"
+        android:paddingRight="12dp"
+        android:paddingBottom="14dp"
+        android:text="@string/undo"
+        android:textColor="@color/yellow_700"
+        android:visibility="visible" />
+
+</LinearLayout>

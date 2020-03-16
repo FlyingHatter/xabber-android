@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="utf-8"?>
+<animated-vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:drawable="@drawable/ic_typing">
+
+    <target android:name="dot1">
+        <aapt:attr name="android:animation">
+            <set>
+                <set android:ordering="sequentially"
+                    >
+                    <objectAnimator
+                        android:duration="200"
+                        android:propertyName="scaleY"
+                        android:valueFrom="0.5f"
+                        android:valueTo="1f"
+                        />
+                    <objectAnimator
+                        android:duration="200"
+                        android:propertyName="scaleY"
+                        android:valueFrom="1f"
+                        android:valueTo="0.5f"
+                        />
+                </set>
+                <set android:ordering="sequentially">
+                    <objectAnimator
+                        android:duration="200"
+                        android:propertyName="scaleX"
+                        android:valueFrom="0.5f"
+                        android:valueTo="1f"
+                        />
+                    <objectAnimator
+                        android:duration="200"
+                        android:propertyName="scaleX"
+                        android:valueFrom="1f"
+                        android:valueTo="0.5f" />
+                </set>
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="dot2">
+        <aapt:attr name="android:animation">
+            <set>
+                <set android:ordering="sequentially">
+                    <objectAnimator
+                        android:duration="200"
+                        android:startOffset="300"
+                        android:propertyName="scaleY"
+                        android:valueFrom="0.5f"
+                        android:valueTo="1f" />
+                    <objectAnimator
+                        android:duration="200"
+                        android:propertyName="scaleY"
+                        android:valueFrom="1f"
+                        android:valueTo="0.5f" />
+                </set>
+                <set android:ordering="sequentially">
+                    <objectAnimator
+                        android:duration="200"
+                        android:startOffset="300"
+                        android:propertyName="scaleX"
+                        android:valueFrom="0.5f"
+                        android:valueTo="1f" />
+                    <objectAnimator
+                        android:duration="200"
+                        android:propertyName="scaleX"
+                        android:valueFrom="1f"
+                        android:valueTo="0.5f" />
+                </set>
+            </set>
+        </aapt:attr>
+    </target>
+
+    <target android:name="dot3">
+        <aapt:attr name="android:animation">
+            <set>
+                <set android:ordering="sequentially">
+                    <objectAnimator
+                        android:duration="200"
+                        android:startOffset="600"
+                        android:propertyName="scaleY"
+                        android:valueFrom="0.5f"
+                        android:valueTo="1f" />
+                    <objectAnimator
+                        android:duration="200"
+                        android:propertyName="scaleY"
+                        android:valueFrom="1f"
+                        android:valueTo="0.5f" />
+                </set>
+                <set android:ordering="sequentially">
+                    <objectAnimator
+                        android:duration="200"
+                        android:startOffset="300"
+                        android:propertyName="scaleX"
+                        android:valueFrom="0.5f"
+                        android:valueTo="1f" />
+                    <objectAnimator
+                        android:duration="200"
+                        android:propertyName="scaleX"
+                        android:valueFrom="1f"
+                        android:valueTo="0.5f" />
+                </set>
+            </set>
+        </aapt:attr>
+    </target>
+
+
+</animated-vector>

@@ -35,6 +35,8 @@ import com.xabber.android.ui.color.ColorManager;
 
 public class NewContactTitleInflater {
 
+    //private static TypingDotsDrawable drawable = new TypingDotsDrawable();
+
     public static void updateTitle(View titleView, final Context context, AbstractContact abstractContact,
                                    NotificationState.NotificationMode mode) {
         final TextView nameView = (TextView) titleView.findViewById(R.id.name);
@@ -129,6 +131,7 @@ public class NewContactTitleInflater {
             }
         }
 
+        //boolean typing = false;
         CharSequence statusText;
         if (isServer) statusText = "Server";
         else {
@@ -188,9 +191,25 @@ public class NewContactTitleInflater {
                     if (statusText.toString().isEmpty())
                         statusText = context.getString(abstractContact.getStatusMode().getStringID());
                 }
-            }
+            }// else {
+            //    typing = true;
+            //}
         }
         statusTextView.setText(statusText);
+        //if (typing) {
+        //    if (!drawable.isStarted()) {
+        //        statusTextView.setCompoundDrawables(null, null, drawable, null);
+        //        drawable.start();
+        //    }
+        //} else {
+        //    if (drawable.isStarted())
+        //        drawable.stop();
+        //}
+        //if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+        //    AnimatedVectorDrawable typing = (AnimatedVectorDrawable) context.getDrawable(R.drawable.ic_typing_animated);
+        //    statusTextView.setCompoundDrawablesWithIntrinsicBounds(null, null, typing, null);
+        //    typing.start();
+        //}
     }
 
     private static String getNormalStatus(AbstractContact contact) {

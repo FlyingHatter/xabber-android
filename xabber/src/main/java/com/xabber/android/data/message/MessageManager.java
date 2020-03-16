@@ -205,6 +205,7 @@ public class MessageManager implements OnLoadListener, OnPacketListener, OnDisco
             chat.setLastActionTimestamp(chatData.getLastActionTimestamp());
             chat.setChatstate(chatData.getLastState());
             chat.setGroupchat(chatData.isGroupchat());
+            chat.setFirstMessageTimestamp(chatData.getFirstMessageTimestamp());
             if (chatData.isHistoryRequestedAtStart()) chat.setHistoryRequestedAtStart(false);
         }
         addChat(chat);
@@ -370,7 +371,6 @@ public class MessageManager implements OnLoadListener, OnPacketListener, OnDisco
             }
         });
         if (Looper.myLooper() != Looper.getMainLooper()) realm.close();
-
     }
 
     public void updateMessageWithError(final String messageId, final String errorDescription) {

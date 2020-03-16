@@ -27,6 +27,7 @@ public class OldChatRealmObject extends RealmObject {
     private Long lastActionTimestamp;
     private int chatStateMode;
     private boolean isGroupchat;
+    private Long firstMessageTimestamp;
 
     public OldChatRealmObject(String accountJid, String userJid) {
         this.id = accountJid + "-" + userJid;
@@ -124,5 +125,13 @@ public class OldChatRealmObject extends RealmObject {
 
     public void setGroupchat(boolean groupchat) {
         isGroupchat = groupchat;
+    }
+
+    public Long getFirstMessageTimestamp() {
+        return firstMessageTimestamp;
+    }
+
+    public void setFirstMessageTimestamp(Long firstMessageTimestamp) {
+        this.firstMessageTimestamp = firstMessageTimestamp;
     }
 }

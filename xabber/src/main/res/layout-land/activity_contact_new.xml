@@ -93,6 +93,7 @@
             android:id="@+id/name_holder"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:minHeight="?attr/actionBarSize"
             android:orientation="vertical">
 
             <LinearLayout
@@ -100,6 +101,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginRight="50dp"
+                android:minHeight="9dp"
                 android:orientation="horizontal">
 
                 <TextView
@@ -169,7 +171,7 @@
                 android:layout_marginBottom="9dp"
                 android:gravity="center_vertical"
                 android:singleLine="false"
-                android:text="Lorem ipsum dolor sit amet"
+                android:text="Lorem ipsum dolor sit ametLorem ipsum dolor sitamet"
                 android:textSize="16sp" />
         </LinearLayout>
 
@@ -184,9 +186,11 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:orientation="vertical"
-            android:paddingTop="81dp">
+            android:paddingTop="81dp"
+            >
 
-            <include layout="@layout/view_contact_bar" />
+            <include
+                layout="@layout/contact_bar_auto_sizing" />
 
             <FrameLayout
                 android:id="@+id/scrollable_container"

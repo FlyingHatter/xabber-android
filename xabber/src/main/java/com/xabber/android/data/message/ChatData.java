@@ -16,11 +16,12 @@ public class ChatData {
     private Long lastActionTimestamp;
     private int state;
     private boolean isGroupchat;
+    private Long firstMessageTimestamp;
 
     public ChatData(String subject, String accountJid, String userJid,
                     boolean archived, NotificationState notificationState, int lastPosition,
                     boolean historyRequestedAtStart, Long lastActionTimestamp, int state,
-                    boolean isGroupchat) {
+                    boolean isGroupchat, Long firstMessageTimestamp) {
         this.subject = subject;
         this.accountJid = accountJid;
         this.userJid = userJid;
@@ -107,5 +108,13 @@ public class ChatData {
 
     public void setGroupchat(boolean groupchat) {
         isGroupchat = groupchat;
+    }
+
+    public Long getFirstMessageTimestamp() {
+        return firstMessageTimestamp;
+    }
+
+    public void setFirstMessageTimestamp(Long firstMessageTimestamp) {
+        this.firstMessageTimestamp = firstMessageTimestamp;
     }
 }

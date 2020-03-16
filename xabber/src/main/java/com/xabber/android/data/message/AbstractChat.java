@@ -131,6 +131,7 @@ public abstract class AbstractChat extends BaseEntity implements RealmChangeList
     private boolean isRemotePreviousHistoryCompletelyLoaded = false;
 
     private Date lastSyncedTime;
+    private long firstMessageTimestamp;
     private MessageRealmObject lastMessage;
     private RealmResults<MessageRealmObject> messages;
     private RealmResults<MessageRealmObject> unreadMessages;
@@ -561,6 +562,18 @@ public abstract class AbstractChat extends BaseEntity implements RealmChangeList
 
     private void updateLastMessage() {
         lastMessage = messages.last(null);
+        updateFirstMessageTimestamp();
+    }
+
+    private void updateFirstMessageTimestamp() {
+        MessageRealmObject firstMessage = messages.first(null);
+        if (firstMessage != null) {
+            if (firstMessage.getTimestamp() != null) {
+                if (firstMessageTimestamp > firstMessage.getTimestamp()) {
+                    firstMessageTimestamp = firstMessage.getTimestamp();
+                }
+            }
+        }
     }
 
     /**
@@ -591,6 +604,18 @@ public abstract class AbstractChat extends BaseEntity implements RealmChangeList
 
     public void setLastActionTimestamp(Long timestamp) {
         lastActionTimestamp = timestamp;
+    }
+
+    public long getFirstMessageTimestamp() {
+        return firstMessageTimestamp;
+    }
+
+    public void setFirstMessageTimestamp(Long timestamp) {
+        if (timestamp == null) {
+            firstMessageTimestamp = Long.MAX_VALUE;
+        } else {
+            firstMessageTimestamp = timestamp;
+        }
     }
 
     public Message createMessagePacket(String body, String stanzaId) {

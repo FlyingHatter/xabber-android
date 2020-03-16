@@ -733,20 +733,8 @@ public class ChatFragment extends FileInteractionFragment implements PopupMenu.O
         if (abstractChat != null) {
             messageRealmObjects = abstractChat.getMessages();
         }
-        if (messageRealmObjects.size() > 0) {
-            setIntroView();
-            inflateIntroView(false);
-        } else {
-            messageRealmObjects.addChangeListener(new RealmChangeListener<RealmResults<MessageRealmObject>>() {
-                @Override
-                public void onChange(RealmResults<MessageRealmObject> element) {
-                    setIntroView();
-                    inflateIntroView(false);
-                    messageRealmObjects.removeChangeListener(this);
-                }
-            });
-            inflateIntroView(true);
-        }
+
+        //addIntroViewIfNeeded(abstractChat);
 
         chatMessageAdapter = new MessagesAdapter(getActivity(), messageRealmObjects, abstractChat,
                 this, this, this, this, this);
@@ -781,17 +769,33 @@ public class ChatFragment extends FileInteractionFragment implements PopupMenu.O
         updateContact();
     }
 
-    private void setIntroView() {
-        View introView = LayoutInflater.from(realmRecyclerView.getContext()).inflate(R.layout.chat_intro_helper_view, null);
-        if (SettingsManager.interfaceTheme() == SettingsManager.InterfaceTheme.dark) {
-            introView.getBackground().setLevel(0);
-        } else {
-            introView.getBackground().setLevel(0);
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                introView.getBackground().setTint(accountColor);
+    private void addIntroViewIfNeeded(AbstractChat chat) {
+        long differenceInMillis = chat.getLastTime().getTime() - chat.getFirstMessageTimestamp();
+        long difference = TimeUnit.DAYS.convert(differenceInMillis, TimeUnit.MILLISECONDS);
+        if (difference < 7) {
+            if (messageRealmObjects.size() > 0) {
+                setIntroView();
+                inflateIntroView(false);
+            } else {
+                messageRealmObjects.addChangeListener(new RealmChangeListener<RealmResults<MessageRealmObject>>() {
+                    @Override
+                    public void onChange(RealmResults<MessageRealmObject> element) {
+                        setIntroView();
+                        inflateIntroView(false);
+                        messageRealmObjects.removeChangeListener(this);
+                    }
+                });
+                inflateIntroView(true);
             }
         }
-        realmRecyclerView.addItemDecoration(new IntroViewDecoration(introView));
+    }
+
+    private void setIntroView() {
+        View introView = LayoutInflater.from(realmRecyclerView.getContext()).inflate(R.layout.chat_intro_helper_view, null);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            introView.getBackground().setTint(accountColor);
+        }
+        realmRecyclerView.addItemDecoration(new IntroViewDecoration(introView, account, user));
     }
 
     public void inflateIntroView(boolean show) {

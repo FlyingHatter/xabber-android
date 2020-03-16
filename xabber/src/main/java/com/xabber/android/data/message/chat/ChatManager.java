@@ -24,8 +24,8 @@ import com.xabber.android.data.OnLoadListener;
 import com.xabber.android.data.account.AccountItem;
 import com.xabber.android.data.account.listeners.OnAccountRemovedListener;
 import com.xabber.android.data.database.DatabaseManager;
-import com.xabber.android.data.database.realmobjects.OldChatRealmObject;
 import com.xabber.android.data.database.realmobjects.NotificationStateRealmObject;
+import com.xabber.android.data.database.realmobjects.OldChatRealmObject;
 import com.xabber.android.data.entity.AccountJid;
 import com.xabber.android.data.entity.NestedMap;
 import com.xabber.android.data.entity.UserJid;
@@ -157,12 +157,13 @@ public class ChatManager implements OnLoadListener, OnAccountRemovedListener {
                     if (chatRealm == null)
                         chatRealm = new OldChatRealmObject(accountJid, userJid);
 
-                    chatRealm.setLastPosition(chat.getLastPosition());
-                    chatRealm.setArchived(chat.isArchived());
-                    chatRealm.setHistoryRequestedAtStart(chat.isHistoryRequestedAtStart());
-                    chatRealm.setLastActionTimestamp(chat.getLastActionTimestamp());
-                    chatRealm.setChatStateMode(chat.getChatstateMode());
-                    chatRealm.setGroupchat(chat.isGroupchat());
+                        chatRealm.setLastPosition(chat.getLastPosition());
+                        chatRealm.setArchived(chat.isArchived());
+                        chatRealm.setHistoryRequestedAtStart(chat.isHistoryRequestedAtStart());
+                        chatRealm.setLastActionTimestamp(chat.getLastActionTimestamp());
+                        chatRealm.setChatStateMode(chat.getChatstateMode());
+                        chatRealm.setGroupchat(chat.isGroupchat());
+                        chatRealm.setFirstMessageTimestamp(chat.getFirstMessageTimestamp());
 
                     NotificationStateRealmObject notificationStateRealmObject = chatRealm.getNotificationState();
                     if (notificationStateRealmObject == null)
@@ -215,7 +216,8 @@ public class ChatManager implements OnLoadListener, OnAccountRemovedListener {
                     realmChat.isHistoryRequestedAtStart(),
                     realmChat.getLastActionTimestamp(),
                     realmChat.getChatstateMode(),
-                    realmChat.isGroupchat());
+                    realmChat.isGroupchat(),
+                    realmChat.getFirstMessageTimestamp());
         }
         if (Looper.myLooper() != Looper.getMainLooper()) realm.close();
         return chatData;

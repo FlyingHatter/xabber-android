@@ -55,6 +55,10 @@ public class ContactTitleInflater {
 
         nameView.setText(abstractContact.getName());
         if (isForVcard){
+            nameView.setVisibility(
+                    abstractContact.getUser().getBareJid().toString().equals(abstractContact.getName()) ?
+                    View.GONE : View.VISIBLE
+            );
             // if it is account, not simple user contact
             if (abstractContact.getUser().getJid().asBareJid().equals(abstractContact.getAccount().getFullJid().asBareJid())) {
                 avatarView.setImageDrawable(AvatarManager.getInstance().getAccountAvatarNoDefault(abstractContact.getAccount()));
